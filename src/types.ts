@@ -20,6 +20,7 @@ export interface Speaker {
 export interface API {
     endpoint: any
     base: string
+    is_gradio?: boolean
     params?: {
         [key: string]: string
     }

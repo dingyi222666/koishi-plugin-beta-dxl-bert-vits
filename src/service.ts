@@ -131,11 +131,46 @@ export class betavits {
             requestUrl = `${requestUrl}?${urlParams}`
         }
 
-        const res = await this.ctx.http.post(requestUrl, payload)
 
-        return h.audio(
-            `${api.base.replace('{version}', speaker.version)}/file=${res.data[1].name}`
-        )
+        if (api.is_gradio) {
+          delete payload.session_hash
+      }
+
+
+      let audioMessage: h
+
+      const res = await this.ctx.http.post(requestUrl, payload);
+
+
+      // if gradio
+      if (res.event_id) {
+          const gradioUrl = `${api.base.replace('{version}', speaker.version)}${api.endpoint}/${res.event_id}`
+
+          // first, request it
+          const gradioEvents = await this.ctx.http.get(gradioUrl, {
+              responseType: 'text',
+              headers: {
+                  'Content-Type': 'text/event-stream'
+              }
+          })
+
+          // parse the event source ('data')
+          const dataSource = gradioEvents.split('\n')
+          for (const data of dataSource) {
+              if (data.startsWith('data:')) {
+                  const dataJson = JSON.parse(data.substring(5))
+                  if (dataJson[0] === 'Success') {
+                      // get the final url
+                      audioMessage = h.audio(dataJson[1].url);
+                  } else {
+                      this.logger.error('ERROR(gradio):', dataJson);
+                  }
+              }
+          }
+      } else {
+          audioMessage = h.audio(`${api.base.replace('{version}', speaker.version)}/file=${res.data[1].name}`);
+      }
+        return  audioMessage
     }
 }
 
