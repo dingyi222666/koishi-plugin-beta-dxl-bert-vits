@@ -1,8 +1,9 @@
-import { Schema } from 'koishi'
+import { Schema } from 'koishi';
 // import { Language } from '../lib/list'
-import { SpeakerKeyIdMap } from './constants'
+import { SpeakerKeyIdMap } from './constants';
 
-export const usage = `
+export const usage =
+    `
 <h2>🌈 使用</h2>
 <ul>
 <li>建议自行添加别名。</li>
@@ -37,8 +38,10 @@ export const usage = `
 <tbody>
 ` +
     Object.entries(SpeakerKeyIdMap)
-        .map((s) => `<tr><td>${s[1]}</td><td>${s[0]}</td></tr>
-`)
+        .map(
+            (s) => `<tr><td>${s[1]}</td><td>${s[0]}</td></tr>
+`
+        )
         .join('') +
     `
 </tbody>
@@ -47,7 +50,7 @@ export const usage = `
 
 ---
 
-<code>下方列表并不是实时生成的，如有误差，还请谅解。</code> 
+<code>下方列表并不是实时生成的，如有误差，还请谅解。</code>
 
 <details>
 <summary>点击展开/折叠 目前可以直接使用的 [讲者--speaker_id] 列表</summary>
@@ -259,87 +262,101 @@ export const usage = `
 `;
 
 export interface Config {
-    groupListmapping: any;
-    loggerinfo: any;
-    speaker: string
-    sdp_ratio: number
-    noise: number
-    noisew: number
-    length: number
-    prompt: string
-    weight: number
+    groupListmapping: {
+        groupList: string;
+        defaultspeaker: string;
+    }[];
+    loggerinfo: boolean;
+    speaker: string;
+    sdp_ratio: number;
+    noise: number;
+    noisew: number;
+    length: number;
+    prompt: string;
+    weight: number;
+    autoTranslate: boolean;
 }
 
-export const Config: Schema<Config> =
-    Schema.intersect([
-        Schema.object({
-            speaker: Schema.union(Object.values(SpeakerKeyIdMap))
-                .description('全局默认讲者`有一些可能失效了`<br>可以输入speaker_id匹配查找')
-                .default('向晚_ZH'),
+export const Config: Schema<Config> = Schema.intersect([
+    Schema.object({
+        speaker: Schema.union(Object.values(SpeakerKeyIdMap))
+            .description(
+                '全局默认讲者`有一些可能失效了`<br>可以输入speaker_id匹配查找'
+            )
+            .default('向晚_ZH'),
 
-            sdp_ratio: Schema.number()
-                .min(0)
-                .max(1)
-                .step(0.1)
-                .role('slider')
-                .description('SDP/DP混合比')
-                .default(0.5),
+        sdp_ratio: Schema.number()
+            .min(0)
+            .max(1)
+            .step(0.1)
+            .role('slider')
+            .description('SDP/DP混合比')
+            .default(0.5),
 
-            noise: Schema.number()
-                .min(0.1)
-                .max(2)
-                .step(0.1)
-                .role('slider')
-                .description('感情')
-                .default(0.6),
+        noise: Schema.number()
+            .min(0.1)
+            .max(2)
+            .step(0.1)
+            .role('slider')
+            .description('感情')
+            .default(0.6),
 
-            noisew: Schema.number()
-                .min(0.1)
-                .max(2)
-                .step(0.1)
-                .role('slider')
-                .description('音素长度')
-                .default(0.9),
+        noisew: Schema.number()
+            .min(0.1)
+            .max(2)
+            .step(0.1)
+            .role('slider')
+            .description('音素长度')
+            .default(0.9),
 
-            length: Schema.number()
-                .min(0.1)
-                .max(2)
-                .step(0.1)
-                .role('slider')
-                .description('语速')
-                .default(1),
+        length: Schema.number()
+            .min(0.1)
+            .max(2)
+            .step(0.1)
+            .role('slider')
+            .description('语速')
+            .default(1),
 
-            // language: Schema.union(Language).description('默认语言').default('ZH'),
+        prompt: Schema.string()
+            .description('用文字描述生成风格。注意只能使用英文且首字母大写单词')
+            .default('Happy'),
 
-            prompt: Schema.string()
-                .description('用文字描述生成风格。注意只能使用英文且首字母大写单词')
-                .default('Happy'),
-
-            weight: Schema.number()
-                .min(0)
-                .max(1)
-                .step(0)
-                .role('slider')
-                .description('主文本和辅助文本的混合比率')
-                .default(0.7),
-        }).description('基础设置'),
-        Schema.object({
-            groupListmapping: Schema.array(Schema.object({
-                groupList: Schema.string().description('群组ID（不要多空格哦）').pattern(/^\S+$/),
+        weight: Schema.number()
+            .min(0)
+            .max(1)
+            .step(0)
+            .role('slider')
+            .description('主文本和辅助文本的混合比率')
+            .default(0.7),
+    }).description('基础设置'),
+    Schema.object({
+        groupListmapping: Schema.array(
+            Schema.object({
+                groupList: Schema.string()
+                    .description('群组ID（不要多空格哦）')
+                    .pattern(/^\S+$/),
                 defaultspeaker: Schema.union(Object.values(SpeakerKeyIdMap))
                     .description('默认讲者 （有一些可能失效了）')
                     .default('向晚_ZH'),
-            })).role('table').description('分群配置默认讲者')
-                .default([
-                    { groupList: '114514', defaultspeaker: "永雏塔菲2.3_AUTO" },
-                ]),
-        }).description('进阶设置'),
+            })
+        )
+            .role('table')
+            .description('分群配置默认讲者')
+            .default([
+                { groupList: '114514', defaultspeaker: '永雏塔菲2.3_AUTO' },
+            ]),
+        autoTranslate: Schema.boolean()
+            .default(false)
+            .description('自动翻译到目标语言（需要翻译服务，并且确保已安装可选依赖`franc-min`)'),
+    }).description('进阶设置'),
 
-        Schema.object({
-            loggerinfo: Schema.boolean().default(false).description("日志调试模式`日常使用无需开启`"),
-        }).description('调试设置'),
-    ]);
+    Schema.object({
+        loggerinfo: Schema.boolean()
+            .default(false)
+            .description('日志调试模式`日常使用无需开启`'),
+    }).description('调试设置'),
+]);
 
 export const inject = {
-    optional: ['vits']
-}
+    optional: ['vits'],
+};

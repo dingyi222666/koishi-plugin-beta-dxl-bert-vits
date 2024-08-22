@@ -69,3 +69,7 @@ export function apply(ctx: Context, config: Config) {
             return await vits.say(text, { ...options, speaker: finalSpeaker }); // 确保 speaker 被正确传递
         });
 }
+
+export const inject = {
+    optional: ['translator']
+}
