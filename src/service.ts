@@ -3,7 +3,7 @@ import Vits from '@initencounter/vits';
 import { Config } from './config';
 import { APISpeakerList, SpeakerKeyIdMap } from './constants';
 import { API, SpeakConfig, Speaker } from './types';
-import type {} from "@koishijs/translator"
+import type {} from '@koishijs/translator';
 
 export class betavits {
     private logger: Logger;
@@ -39,21 +39,27 @@ export class betavits {
         input: string,
         options: SpeakConfig
     ): Promise<string> {
-        const franc = await importFranc();
+        try {
+            const franc = await importFranc();
 
-        const sourceLanguage = francLanguageMapping[franc.franc(input)] ?? options.language
+            const sourceLanguage =
+                francLanguageMapping[franc.franc(input)] ?? options.language;
 
-        if (sourceLanguage === options.language || !this.config.autoTranslate) {
+            if (
+                sourceLanguage === options.language ||
+                !this.config.autoTranslate
+            ) {
+                return input;
+            }
+
+            return this.ctx.translator.translate({
+                input: input,
+                source: sourceLanguage.toLocaleLowerCase(),
+                target: options.language.toLocaleLowerCase(),
+            });
+        } catch (error) {
             return input;
         }
-
-
-        return this.ctx.translator.translate({
-          input: input,
-          source: sourceLanguage.toLocaleLowerCase(),
-          target: options.language.toLocaleLowerCase()
-        })
-
     }
 
     private findSpeaker(rawSpeaker: string): [API, Speaker, string] {
